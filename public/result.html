@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScreenMagnify 확대</title>
+  <link rel="stylesheet" href="css/result.css">
+</head>
+<body>
+  <div class="result-app">
+    <header class="titlebar">
+      <div class="brand">
+        <span class="brand-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.2"></circle>
+            <path d="M15.1 15.1 20 20"></path>
+            <path d="M10.5 7.6v5.8M7.6 10.5h5.8"></path>
+          </svg>
+        </span>
+        <span class="brand-name">ScreenMagnify</span>
+        <span class="brand-sub">확대 결과</span>
+      </div>
+      <div class="titlebar-actions">
+        <button class="icon-button" id="btn-theme" title="테마 전환" aria-label="테마 전환">
+          <span class="theme-icon">
+            <svg class="moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5 7.5 7.5 0 1 0 19 14.5z"></path></svg>
+            <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.8v2M12 19.2v2M2.8 12h2M19.2 12h2M5.5 5.5 7 7M17 17l1.5 1.5M18.5 5.5 17 7M7 17l-1.5 1.5"></path></svg>
+          </span>
+        </button>
+        <button class="icon-button" id="btn-min" title="최소화" aria-label="최소화">
+          <svg viewBox="0 0 24 24"><path d="M6 12h12"></path></svg>
+        </button>
+        <button class="icon-button" id="btn-max" title="최대화" aria-label="최대화">
+          <svg viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="1"></rect></svg>
+        </button>
+        <button class="icon-button danger-hover" id="btn-close" title="닫기" aria-label="닫기">
+          <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <button class="save-button" id="btn-save" title="현재 패널을 PNG로 저장 (Ctrl+S)">
+        <svg viewBox="0 0 24 24"><path d="M5 4.5h11l3 3v12H5z"></path><path d="M8 4.5v5h7v-5M8 19.5v-5.5h8v5.5"></path></svg>
+        <span>저장</span>
+      </button>
+      <div class="toolbar-sep"></div>
+      <label class="method-field">
+        <span>보간</span>
+        <select id="method-select" class="select"></select>
+      </label>
+      <div class="zoom-field">
+        <span class="zoom-caption">확대</span>
+        <div class="zoom-stepper">
+          <button id="zoom-out" title="축소" aria-label="축소">−</button>
+          <output id="zoom-value">x1.0</output>
+          <button id="zoom-in" title="확대" aria-label="확대">+</button>
+        </div>
+        <button class="reset-button" id="zoom-reset" title="초기 화면으로 (더블클릭)">초기화</button>
+      </div>
+      <span class="model-info" id="model-info"></span>
+      <span class="ai-badge hidden" id="ai-badge" title="클릭: CPU/GPU 전환"><span class="ai-dot"></span><span id="ai-badge-text">AI 준비 중</span></span>
+    </div>
+
+    <main class="viewport" id="viewport">
+      <div class="panels count-1" id="panels"></div>
+      <div class="capture-status" id="capture-status">
+        <span class="spinner"></span>
+        <span id="capture-status-text">화면을 캡처하는 중...</span>
+      </div>
+      <div class="error-card hidden" id="error-card">
+        <svg viewBox="0 0 24 24"><path d="M12 3.5 21 20H3z"></path><path d="M12 9.5v5M12 17.2v.3"></path></svg>
+        <strong>화면을 캡처하지 못했습니다</strong>
+        <p id="error-text">다른 화면을 선택하거나 다시 시도하세요.</p>
+        <button id="btn-retry">다시 시도</button>
+      </div>
+      <div class="hint">
+        <span>휠: 확대</span>
+        <span>드래그: 이동</span>
+        <span>더블클릭: 초기화</span>
+      </div>
+      <div class="hud" id="hud">x1.0</div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="save-modal">
+    <div class="save-card" role="dialog" aria-modal="true" aria-labelledby="save-title">
+      <header class="modal-head">
+        <strong id="save-title">이미지 저장</strong>
+        <button class="icon-button" id="save-close" title="닫기" aria-label="닫기">
+          <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"></path></svg>
+        </button>
+      </header>
+      <div class="save-body">
+        <aside class="preset-pane">
+          <div class="pane-title">빠른 위치</div>
+          <div class="save-presets" id="save-presets"></div>
+        </aside>
+        <section class="browser-pane">
+          <div class="path-row">
+            <button class="square-button" id="save-up" title="상위 폴더" aria-label="상위 폴더">
+              <svg viewBox="0 0 24 24"><path d="M12 19V5M6.5 10.5 12 5l5.5 5.5"></path></svg>
+            </button>
+            <input class="path-input" id="save-path" spellcheck="false" aria-label="현재 폴더">
+            <button class="square-button" id="save-go" title="이동" aria-label="이동">
+              <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6.5 18.5 12 13 17.5"></path></svg>
+            </button>
+            <button class="square-button" id="save-new-folder" title="새 폴더" aria-label="새 폴더">
+              <svg viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-15z"></path><path d="M12 11v5M9.5 13.5h5"></path></svg>
+            </button>
+          </div>
+          <div class="new-folder-row hidden" id="new-folder-row">
+            <input id="new-folder-name" placeholder="새 폴더 이름" maxlength="80">
+            <button id="new-folder-create">만들기</button>
+            <button id="new-folder-cancel">취소</button>
+          </div>
+          <div class="file-list" id="save-list"></div>
+        </section>
+      </div>
+      <footer class="save-footer">
+        <div class="preview-box">
+          <img id="save-preview" alt="저장 미리보기">
+          <span>미리보기</span>
+        </div>
+        <div class="name-box">
+          <label for="save-name">파일 이름</label>
+          <div class="name-row">
+            <input id="save-name" spellcheck="false" maxlength="120">
+            <span>.png</span>
+          </div>
+          <small>같은 이름이 있으면 자동으로 번호가 붙습니다.</small>
+        </div>
+        <div class="save-actions">
+          <button class="ghost-button" id="save-cancel">취소</button>
+          <button class="primary-button" id="save-confirm">저장</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/nis-coefs.js"></script>
+  <script src="js/methods.js"></script>
+  <script src="js/upscaler.js"></script>
+  <script src="js/cpu-scaler.js"></script>
+  <script src="js/result.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScreenMagnify3 설정</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="translucent">
+  <div class="app">
+    <header class="titlebar">
+      <div class="brand"><strong>설정</strong></div>
+      <div class="titlebar-actions">
+        <button class="icon-button danger-hover" id="btn-close" title="닫기" aria-label="닫기">
+          <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"></path></svg>
+        </button>
+      </div>
+    </header>
+    <div class="settings-list">
+      <label class="field-row"><span>모드</span><select id="set-mode" class="select" style="width: 150px"><option value="1">1: 선택 캡처</option><option value="2">2: 돋보기</option></select></label>
+      <label class="check-row"><input type="checkbox" id="set-top"><span>항상 위</span></label>
+      <label class="check-row"><input type="checkbox" id="set-freeze"><span>화면 Freeze</span></label>
+      <label class="field-row"><span>시간 지연 (초)</span><input type="number" id="set-delay" min="0" max="10" step="1"></label>
+      <label class="field-row"><span>보간 방법</span><select id="set-method" class="select"></select></label>
+      <label class="field-row"><span>연산 장치</span><select id="set-device" class="select small"><option value="cpu">CPU</option><option value="gpu">GPU</option></select></label>
+      <label class="field-row"><span>AI 최대 처리 크기</span>
+        <select id="set-aimax" class="select small" style="width: 96px"><option value="0">자동</option><option value="-1" id="aimax-whole">선택영역</option><option value="256">256px</option><option value="512">512px</option><option value="768">768px</option><option value="1024">1024px</option><option value="1280">1280px</option><option value="1536">1536px</option></select>
+      </label>
+      <label class="field-row"><span>multi 화면</span>
+        <select id="set-panels" class="select small"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+      </label>
+      <label class="field-row"><span>돋보기 크기 (화면 너비 %)</span><input type="number" id="set-size" min="5" max="40" step="1"></label>
+      <label class="field-row"><span>돋보기 최대 크기 (배)</span><input type="number" id="set-max" min="1" max="5" step="1"></label>
+      <label class="field-row"><span>돋보기 모양</span>
+        <select id="set-style" class="select small" style="width: 96px"><option value="clean">깔끔</option><option value="bold">강조</option><option value="classic">돋보기</option></select>
+      </label>
+    </div>
+  </div>
+  <script src="js/methods.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

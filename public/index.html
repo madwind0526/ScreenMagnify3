@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScreenMagnify3</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="round">
+  <div class="app">
+    <header class="titlebar">
+      <div class="brand">
+        <span class="brand-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.2"></circle>
+            <path d="M15.1 15.1 20 20"></path>
+            <path d="M10.5 7.6v5.8M7.6 10.5h5.8"></path>
+          </svg>
+        </span>
+        <span class="brand-text"><span class="brand-name">ScreenMagnify3</span><small class="brand-author" id="build-info">by madwind</small></span>
+      </div>
+      <div class="titlebar-actions">
+        <button class="icon-button" id="btn-min" title="최소화" aria-label="최소화">
+          <svg viewBox="0 0 24 24"><path d="M6 12h12"></path></svg>
+        </button>
+        <button class="icon-button danger-hover" id="btn-close" title="닫기" aria-label="닫기">
+          <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <nav class="toolbar">
+      <button class="tool-button run" id="btn-run" title="실행 (Ctrl+Enter / 모드1: Ctrl+W, 모드2: Ctrl+Q)" aria-label="실행">
+        <svg class="run-icon" viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5z"></path></svg>
+        <span class="countdown" id="countdown"></span>
+      </button>
+      <span class="sep"></span>
+      <button class="tool-button shape" data-shape="rect" title="사각형" aria-label="사각형">
+        <svg viewBox="0 0 24 24"><rect x="4.5" y="6" width="15" height="12"></rect></svg>
+      </button>
+      <button class="tool-button shape" data-shape="ellipse" title="원형" aria-label="원형">
+        <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8" ry="6.5"></ellipse></svg>
+      </button>
+      <button class="tool-button shape" data-shape="free" title="자유" aria-label="자유">
+        <svg viewBox="0 0 24 24"><path d="M5 12.5c-.8-3.8 2.2-7 6.5-7 3 0 4 1.8 6.5 1.8 2.5 0 3 2.700 1.500 5-1.500 2.300-3.500 4.700-7.500 4.700-2.600 0-3.800-1-5-2.200"></path><path d="M6.500 16.500c-1.500 1-2 2.300-1.200 3.300"></path></svg>
+      </button>
+      <span class="sep"></span>
+      <button class="tool-button" id="btn-settings" title="설정" aria-label="설정">
+        <svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"></path><circle cx="15" cy="7" r="2"></circle><circle cx="9" cy="17" r="2"></circle></svg>
+      </button>
+      <button class="tool-button" id="btn-theme" title="다크/라이트" aria-label="다크/라이트">
+        <span class="theme-icon">
+          <svg class="moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5 7.5 7.5 0 1 0 19 14.5z"></path></svg>
+          <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.8v2M12 19.2v2M2.8 12h2M19.2 12h2M5.5 5.5 7 7M17 17l1.5 1.5M18.5 5.5 17 7M7 17l-1.5 1.5"></path></svg>
+        </span>
+      </button>
+    </nav>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/methods.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

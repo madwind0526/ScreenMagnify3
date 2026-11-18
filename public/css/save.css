@@ -1,0 +1,582 @@
+/* Save dialog, copied from ScreenMagnify (result.css / main.css). Square corners like the rest of the app. */
+:root {
+  
+  --bg: #170b2e;
+  --bg-soft: #1f1040;
+  --bg-glow: rgba(124, 106, 247, 0.16);
+  --panel: #171a23;
+  --panel-soft: #1d2130;
+  --panel-hover: #232838;
+  --border: #2a2f3f;
+  --border-strong: #3a4160;
+  --text: #eef1f8;
+  --muted: #99a2b8;
+  --muted-2: #6f7890;
+  --accent: #7c6af7;
+  --accent-2: #a78bfa;
+  --accent-soft: rgba(124, 106, 247, 0.16);
+  --danger: #f87171;
+  --success: #4ade80;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  --radius: 0;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f2f4fa;
+  --bg-soft: #ffffff;
+  --bg-glow: rgba(109, 92, 245, 0.12);
+  --panel: #ffffff;
+  --panel-soft: #f3f5fb;
+  --panel-hover: #eceffa;
+  --border: #dce1ee;
+  --border-strong: #c3cbe0;
+  --text: #171a23;
+  --muted: #5e6a83;
+  --muted-2: #8790a5;
+  --accent: #6d5cf5;
+  --accent-2: #8b5cf6;
+  --accent-soft: rgba(109, 92, 245, 0.12);
+  --danger: #dc2626;
+  --success: #16a34a;
+  --shadow: 0 18px 50px rgba(33, 42, 70, 0.16);
+}
+
+
+/* Base for the dialog inside the lens window (the lens page has its own body styles). */
+#save-modal, #save-modal * { box-sizing: border-box; font-family: "Segoe UI Variable", "Segoe UI", "Malgun Gothic", sans-serif; }
+#save-modal { color: var(--text); font-size: 14px; cursor: default; }
+#save-modal button { border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+#save-modal input { font: inherit; color: var(--text); user-select: text; cursor: text; }
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 0;
+  color: var(--muted);
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.icon-button:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.icon-button.danger-hover:hover {
+  background: rgba(248, 113, 113, 0.18);
+  color: var(--danger);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  padding: 0 8px;
+}
+
+.sep {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+}
+
+.tool-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.tool-button:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.tool-button:active {
+  background: var(--accent-soft);
+}
+
+.tool-button.active {
+  color: var(--accent-2);
+  background: var(--accent-soft);
+}
+
+.tool-button.run {
+  width: 52px;
+  color: #fff;
+  border: 0;
+  background: linear-gradient(135deg, #7c6af7, #4f46e5);
+  box-shadow: 0 8px 20px rgba(91, 76, 230, 0.35);
+}
+
+.tool-button.run:hover {
+  filter: brightness(1.1);
+}
+
+.tool-button.run:disabled {
+  cursor: progress;
+  filter: grayscale(0.3) brightness(0.85);
+}
+
+.run-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  stroke: none;
+}
+
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 0;
+  background: rgba(40, 30, 140, 0.85);
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.countdown:empty {
+  display: none;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(4, 6, 12, 0.62);
+  backdrop-filter: blur(6px);
+}
+
+.save-card {
+  width: min(820px, 100%);
+  height: min(610px, calc(100vh - 36px));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: pop 140ms ease-out;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.modal-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 10px 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-head strong {
+  font-size: 14px;
+}
+
+.save-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+.preset-pane {
+  flex: 0 0 164px;
+  min-height: 0;
+  padding: 12px 9px;
+  border-right: 1px solid var(--border);
+  background: var(--panel-soft);
+  overflow-y: auto;
+}
+
+.pane-title {
+  padding: 0 5px 8px;
+  color: var(--muted-2);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.save-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.preset-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 8px;
+  border-radius: 0;
+  color: var(--muted);
+  text-align: left;
+  font-size: 12px;
+}
+
+.preset-button:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.preset-button.active {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.preset-button svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.preset-button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.browser-pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.path-row {
+  display: flex;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+
+.square-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--panel-soft);
+  color: var(--muted);
+}
+
+.square-button:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.square-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.path-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--panel-soft);
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+}
+
+.path-input:focus {
+  border-color: var(--accent);
+}
+
+.new-folder-row {
+  display: flex;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.new-folder-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--panel-soft);
+  outline: none;
+}
+
+.new-folder-row button {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 0;
+  background: var(--panel-hover);
+  color: var(--text);
+  font-size: 11.5px;
+}
+
+.file-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--panel-soft);
+  overflow-y: auto;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 4px 9px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
+  color: var(--muted);
+  font-size: 12px;
+  cursor: default;
+}
+
+.file-row:last-child {
+  border-bottom: 0;
+}
+
+.file-row.folder,
+.file-row.dir {
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.file-row.folder:hover,
+.file-row.dir:hover {
+  background: var(--panel-hover);
+}
+
+.file-row.file:hover {
+  background: color-mix(in srgb, var(--panel-hover) 60%, transparent);
+}
+
+.file-row svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: var(--muted-2);
+}
+
+.file-row.folder svg,
+.file-row.dir svg {
+  color: #eab308;
+}
+
+.file-row.file svg {
+  color: #60a5fa;
+}
+
+.file-row .file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-row .file-hint {
+  margin-left: auto;
+  color: var(--muted-2);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.list-note {
+  padding: 26px 12px;
+  color: var(--muted-2);
+  font-size: 12px;
+  text-align: center;
+}
+
+.save-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--panel-soft);
+}
+
+.preview-box {
+  position: relative;
+  width: 104px;
+  height: 62px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: #000;
+  overflow: hidden;
+}
+
+.preview-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.preview-box span {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  padding: 1px 4px;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 9px;
+}
+
+.name-box {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.name-box label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.name-row:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.name-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 33px;
+  padding: 0 9px;
+  border: 0;
+  background: transparent;
+  outline: none;
+}
+
+.name-row span {
+  padding: 0 9px;
+  color: var(--muted-2);
+  font-size: 12px;
+}
+
+.name-box small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted-2);
+  font-size: 10px;
+}
+
+.save-actions {
+  display: flex;
+  gap: 7px;
+  flex: 0 0 auto;
+  align-self: flex-end;
+}
+
+.ghost-button,
+.primary-button {
+  height: 34px;
+  padding: 0 15px;
+  border-radius: 0;
+  font-weight: 600;
+}
+
+.ghost-button {
+  background: var(--panel-hover);
+  color: var(--muted);
+}
+
+.ghost-button:hover {
+  color: var(--text);
+}
+
+.primary-button {
+  background: linear-gradient(135deg, var(--accent), #5b4ce6);
+  color: #fff;
+  min-width: 78px;
+}
+
+.primary-button:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 60;
+  max-width: min(520px, calc(100vw - 40px));
+  padding: 11px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  font-size: 12.5px;
+  opacity: 0;
+  transform: translate(-50%, 10px);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+.toast.error {
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border));
+}
+
+
+
+/* The icons rely on the global svg rule of ScreenMagnify's main.css. */
+#save-modal svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }

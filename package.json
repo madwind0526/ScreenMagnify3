@@ -1,0 +1,54 @@
+{
+  "name": "screenmagnify3",
+  "version": "1.0.0",
+  "description": "Screen magnifier: selection capture (mode 1) and lens (mode 2)",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "dist": "electron-builder --win dir && node scripts/zip-release.mjs",
+    "screenshots": "electron scripts/capture-docs.cjs",
+    "check": "node scripts/check.cjs"
+  },
+  "keywords": [
+    "magnifier",
+    "screen",
+    "upscale",
+    "realesrgan"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^45.3.1",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "onnxruntime-node": "^1.31.1"
+  },
+  "build": {
+    "appId": "com.madwind.screenmagnify3",
+    "productName": "ScreenMagnify3",
+    "directories": {
+      "output": "release"
+    },
+    "asar": false,
+    "files": [
+      "electron/**",
+      "public/**",
+      "package.json",
+      "!node_modules/onnxruntime-node/bin/napi-v6/{darwin,linux}/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/win32/arm64/**"
+    ],
+    "extraResources": [
+      {
+        "from": "models",
+        "to": "models"
+      }
+    ],
+    "win": {
+      "target": "dir",
+      "icon": "public/assets/icon.png"
+    }
+  }
+}

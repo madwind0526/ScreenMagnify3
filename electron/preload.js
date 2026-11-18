@@ -11,7 +11,8 @@ contextBridge.exposeInMainWorld('api', {
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
     set: (patch) => ipcRenderer.invoke('settings:set', patch),
-    toggleWindow: () => ipcRenderer.send('settings:toggleWindow')
+    toggleWindow: () => ipcRenderer.send('settings:toggleWindow'),
+    captureHotkey: (on) => ipcRenderer.send('hotkey:capture', !!on)
   },
   window: {
     minimize: () => ipcRenderer.send('window:minimize'),

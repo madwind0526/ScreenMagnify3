@@ -261,7 +261,7 @@ svg {
 .settings-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
   padding: 14px 16px 22px;
 }
 
@@ -270,7 +270,7 @@ svg {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 38px;
+  min-height: 32px;
   font-size: 13.5px;
 }
 
@@ -450,4 +450,23 @@ body.round .app {
   opacity: 0.3;
   cursor: not-allowed;
   filter: grayscale(1);
+}
+
+/* Hotkey fields in the settings window (click, then press the new key). */
+.field-row input.hotkey {
+  width: 150px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--panel-soft);
+  color: var(--text);
+  text-align: center;
+  outline: none;
+  cursor: pointer;
+}
+
+.field-row input.hotkey.capturing {
+  border-color: var(--accent);
+  color: var(--accent-2);
 }

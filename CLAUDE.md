@@ -25,9 +25,9 @@ Settings: `%APPDATA%\screenmagnify3`.
 
 - **Base is ScreenMagnify's UI.** Lens files from ScreenMagnify2 are added unchanged: `public/lens.html`, `js/lens.js`, `js/save-dialog.js`, `css/save.css`, `assets/ring-carbon.png`. Shared files (`methods.js`, `upscaler.js`, `cpu-scaler.js`, `ai-worker.js`) were identical apart from ScreenMagnify having newer fixes, so ScreenMagnify's copies are used.
 - **One settings object** (`electron/main.js`, `applySettingsPatch`). `selection:start` branches on `settings.mode` (`startLens` for 2). Options of the other mode are greyed and disabled in `settings.js`; the Free shape button is disabled in mode 2 (a saved `free` runs as `rect` in the lens).
-- **Hotkeys:** Ctrl+Q = mode 2 (lens), Ctrl+W = mode 1 (capture). The hotkey also switches `mode`, so the settings window matches what ran.
+- **Hotkeys** (settings `hotkeyMode1/2`, `hotkeyRun1/2`, defaults Ctrl+1, Ctrl+2, Ctrl+W, Ctrl+Q; picked in settings via `public/js/hotkey.js`): all global while the main window is shown. A run key also switches `mode`. Duplicates are refused; the settings window suspends them while a key is typed (`hotkey:capture`).
 - **Background colors per project:** ScreenMagnify black `#0b0c10`, ScreenMagnify2 dark blue `#08162e`, ScreenMagnify3 dark purple `#170b2e` (`--bg` / `--bg-soft` in `main.css`, `result.css`, `save.css`).
-- Settings window height is `SETTINGS_HEIGHT` in `main.js` (title bar + 11 rows); re-measure when adding rows.
+- Settings window height is `SETTINGS_HEIGHT` in `main.js` (title bar + 15 rows, rows are 32 px); re-measure when adding rows.
 - Ctrl+Q / Ctrl+W are global shortcuts: do not run ScreenMagnify or ScreenMagnify2 at the same time.
 
 ## Memory Bank

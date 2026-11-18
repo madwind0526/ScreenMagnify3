@@ -1,7 +1,10 @@
 (function () {
   const $ = (id) => document.getElementById(id);
 
+  const HOTKEYS = { 'set-hk-mode1': 'hotkeyMode1', 'set-hk-mode2': 'hotkeyMode2', 'set-hk-run1': 'hotkeyRun1', 'set-hk-run2': 'hotkeyRun2' };
+
   function apply(next) {
+    for (const [id, name] of Object.entries(HOTKEYS)) if (document.activeElement !== $(id)) $(id).value = hotkeyLabel(next[name]);
     document.documentElement.dataset.theme = next.theme === 'light' ? 'light' : 'dark';
     $('set-top').checked = !!next.alwaysOnTop;
     $('set-freeze').checked = !!next.freeze;
@@ -35,6 +38,7 @@
   const save = (patch) => window.api.settings.set(patch).then(apply);
 
   $('set-device').addEventListener('change', (e) => save({ aiDevice: e.target.value }));
+  for (const [id, name] of Object.entries(HOTKEYS)) bindHotkey($(id), (accelerator) => save({ [name]: accelerator }));
   $('btn-close').addEventListener('click', () => window.api.window.close());
   $('set-top').addEventListener('change', (e) => save({ alwaysOnTop: e.target.checked }));
   $('set-freeze').addEventListener('change', (e) => save({ freeze: e.target.checked }));
@@ -47,10 +51,6 @@
   $('set-aimax').addEventListener('change', (e) => save({ aiMaxSize: Number(e.target.value) }));
   $('set-panels').addEventListener('change', (e) => save({ panelCount: Number(e.target.value) }));
   window.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && (e.key === '1' || e.key === '2')) {
-      e.preventDefault();
-      save({ mode: Number(e.key) });
-    }
     if (e.key === 'Escape') window.api.window.close();
   });
 

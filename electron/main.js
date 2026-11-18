@@ -18,6 +18,10 @@ const GPU_ONLY = { nis: 'lanczos3', 'realesrgan-x4plus': 'realesrgan' };
 const SHAPES = ['rect', 'ellipse', 'free'];
 const LENS_STYLES = ['clean', 'bold', 'classic'];
 const DEFAULT_SETTINGS = {
+  hotkeyMode1: 'Control+1',
+  hotkeyMode2: 'Control+2',
+  hotkeyRun1: 'Control+W',
+  hotkeyRun2: 'Control+Q',
   mode: 1, // 1 = capture a selection (ScreenMagnify), 2 = lens over the screen (ScreenMagnify2)
   lensSize: 10,
   lensStyle: 'clean',
@@ -102,6 +106,12 @@ function loadSettings() {
 
 function validateSettings() {
   settings.mode = settings.mode === 2 ? 2 : 1;
+  // A missing, invalid or duplicated hotkey goes back to its default.
+  const seen = new Set();
+  for (const name of Object.keys(HOTKEY_ACTIONS)) {
+    if (!validHotkey(settings[name]) || seen.has(settings[name])) settings[name] = DEFAULT_SETTINGS[name];
+    seen.add(settings[name]);
+  }
   if (!LENS_STYLES.includes(settings.lensStyle)) settings.lensStyle = DEFAULT_SETTINGS.lensStyle;
   settings.lensSize = Math.max(5, Math.min(40, Math.round(Number(settings.lensSize) || 10)));
   settings.lensMaxScale = Math.max(1, Math.min(5, Math.round(Number(settings.lensMaxScale) || 2)));
@@ -210,33 +220,54 @@ function createMainWindow() {
   });
 }
 
-// Ctrl+Q runs the lens (mode 2) and Ctrl+W runs the capture (mode 1) from anywhere, but only while the main window is
-// shown. A minimized, hidden (selection or lens in progress) or closed app does not register them, so the keys keep
-// working in other programs then.
-const RUN_HOTKEYS = { 'Control+Q': 2, 'Control+W': 1 };
+// An accelerator is "Control"/"Alt"/"Shift" modifiers (at least Control or Alt) plus one letter, digit or F1..F24.
+function validHotkey(value) {
+  if (typeof value !== 'string') return false;
+  const parts = value.split('+');
+  const key = parts.pop();
+  if (!/^([A-Z0-9]|F([1-9]|1[0-9]|2[0-4]))$/.test(key)) return false;
+  if (new Set(parts).size !== parts.length || !parts.every((part) => ['Control', 'Alt', 'Shift'].includes(part))) return false;
+  return parts.includes('Control') || parts.includes('Alt');
+}
+
+// Four global hotkeys (settings: hotkeyMode1/2 switch the mode, hotkeyRun1/2 switch the mode and run). They are
+// registered only while the main window is shown. A minimized, hidden (selection or lens in progress) or closed app
+// does not register them, so the keys keep working in other programs then.
+function runInMode(mode) {
+  if (settings.mode !== mode) applySettingsPatch({ mode });
+  mainWindow.webContents.send('hotkey:run');
+}
+const HOTKEY_ACTIONS = {
+  hotkeyMode1: () => applySettingsPatch({ mode: 1 }),
+  hotkeyMode2: () => applySettingsPatch({ mode: 2 }),
+  hotkeyRun1: () => runInMode(1),
+  hotkeyRun2: () => runInMode(2)
+};
+const registeredHotkeys = new Map(); // setting name -> registered accelerator
+let hotkeyCapturing = false; // the settings window is recording a new key
 function syncRunHotkey() {
-  const active = !!mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && !mainWindow.isMinimized();
-  for (const [key, mode] of Object.entries(RUN_HOTKEYS)) {
-    if (!active) {
-      globalShortcut.unregister(key);
-      continue;
+  const active = !!mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && !mainWindow.isMinimized() && !hotkeyCapturing;
+  for (const [name, action] of Object.entries(HOTKEY_ACTIONS)) {
+    const wanted = active ? settings[name] : null;
+    const have = registeredHotkeys.get(name);
+    if (have && have !== wanted) {
+      globalShortcut.unregister(have);
+      registeredHotkeys.delete(name);
     }
-    if (globalShortcut.isRegistered(key)) continue;
+    if (!wanted || registeredHotkeys.has(name)) continue;
     try {
-      // The main window's page starts the run, so the countdown and the busy state work as for a click.
-      globalShortcut.register(key, () => {
-        if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible() || mainWindow.isMinimized()) return;
-        if (settings.mode !== mode) applySettingsPatch({ mode });
-        mainWindow.webContents.send('hotkey:run');
+      const ok = globalShortcut.register(wanted, () => {
+        if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && !mainWindow.isMinimized()) action();
       });
+      if (ok) registeredHotkeys.set(name, wanted);
     } catch {
       // Another program owns the key: the button still works.
     }
   }
 }
 
-// Content height of the settings window: title bar plus 11 rows.
-const SETTINGS_HEIGHT = 568;
+// Content height of the settings window: title bar plus 15 rows.
+const SETTINGS_HEIGHT = 594;
 function toggleSettingsWindow() {
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.close();
@@ -304,6 +335,11 @@ function setupDisplayMediaHandler() {
 function applySettingsPatch(patch) {
   if (!patch || typeof patch !== 'object') return { ...settings };
   if ('alwaysOnTop' in patch) settings.alwaysOnTop = !!patch.alwaysOnTop;
+  for (const name of Object.keys(HOTKEY_ACTIONS)) {
+    // A key already used by another action is refused.
+    const taken = Object.keys(HOTKEY_ACTIONS).some((other) => other !== name && settings[other] === patch[name]);
+    if (name in patch && validHotkey(patch[name]) && !taken) settings[name] = patch[name];
+  }
   if ('mode' in patch) settings.mode = patch.mode === 2 ? 2 : 1;
   if ('lensSize' in patch) settings.lensSize = patch.lensSize;
   if ('lensStyle' in patch) settings.lensStyle = patch.lensStyle;
@@ -321,6 +357,7 @@ function applySettingsPatch(patch) {
   validateSettings();
   saveSettings();
   applyAlwaysOnTop();
+  syncRunHotkey();
   const snapshot = { ...settings, customPaths: [...settings.customPaths] };
   broadcast('settings:changed', snapshot);
   return snapshot;
@@ -471,6 +508,11 @@ function finishLens() {
 }
 
 function setupIpc() {
+  ipcMain.on('hotkey:capture', (event, on) => {
+    hotkeyCapturing = !!on;
+    syncRunHotkey();
+  });
+
   ipcMain.handle('settings:get', () => ({ ...settings, customPaths: [...settings.customPaths] }));
 
   ipcMain.handle('settings:set', (event, patch) => applySettingsPatch(patch));

@@ -17,6 +17,8 @@
 
   function apply(next) {
     current = next;
+    const label = (key) => next[key].replace('Control', 'Ctrl');
+    runButton.title = `실행 (Ctrl+Enter, 모드 1: ${label('hotkeyRun1')}, 모드 2: ${label('hotkeyRun2')})`;
     document.documentElement.dataset.theme = next.theme === 'light' ? 'light' : 'dark';
     // The lens has no free shape: in mode 2 it is disabled and rect shows as selected.
     const lens = next.mode === 2;
@@ -68,12 +70,6 @@
   $('btn-min').addEventListener('click', () => window.api.window.minimize());
   $('btn-close').addEventListener('click', () => window.api.window.close());
   window.addEventListener('keydown', (event) => {
-    // Ctrl+1 / Ctrl+2 pick the mode (only while this window has focus, so other programs keep their own Ctrl+digit).
-    if ((event.ctrlKey || event.metaKey) && (event.key === '1' || event.key === '2')) {
-      event.preventDefault();
-      save({ mode: Number(event.key) });
-      return;
-    }
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault();
       run();

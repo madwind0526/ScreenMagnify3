@@ -5,6 +5,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob: mediastream:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'">
   <title>ScreenMagnify3</title>
   <link rel="stylesheet" href="css/save.css">
+  <link rel="stylesheet" href="css/editor.css">
   <style>
     :root { --ring: url(assets/ring-carbon.png); }
     html, body { margin: 0; height: 100%; overflow: hidden; background: #000; cursor: crosshair; user-select: none; }
@@ -58,7 +59,7 @@
   <video id="bgv" muted playsinline style="display:none"></video>
   <div id="dim"></div>
   <div id="lens"><div id="ring"></div><div id="view"><canvas id="zc"></canvas><canvas id="zc2"></canvas><div id="glare"></div><div id="badge"></div></div><div id="handle"></div></div>
-  <div id="hint">화면 Freezed, Press ESC to continue<small>휠: 확대/축소 · Ctrl+휠: 돋보기 크기 · 우클릭: 종료 · Ctrl+S: 저장</small><small id="warn"></small><small id="ai"></small></div>
+  <div id="hint">화면 Freezed, Press ESC to continue<small>휠: 확대/축소 · Ctrl+휠: 돋보기 크기 · ↑↓: 모델 · →: 편집 · 우클릭: 종료 · Ctrl+S: 저장</small><small id="warn"></small><small id="ai"></small></div>
   <div class="modal-backdrop hidden" id="save-modal">
     <div class="save-card" role="dialog" aria-modal="true" aria-labelledby="save-title">
       <header class="modal-head">
@@ -118,7 +119,10 @@
   <script src="js/methods.js"></script>
   <script src="js/upscaler.js"></script>
   <script src="js/cpu-scaler.js"></script>
+  <div class="editor-root" id="editor-root"></div>
   <script src="js/save-dialog.js"></script>
+  <script src="js/editor-core.js"></script>
+  <script src="js/editor.js"></script>
   <script src="js/lens.js"></script>
 </body>
 </html>

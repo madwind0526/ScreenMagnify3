@@ -670,6 +670,29 @@ function setupIpc() {
     return { name: item.name, file: item.file, size };
   });
 
+  ipcMain.handle('sam:encode', async (event, payload) => {
+    try {
+      const data = payload && (payload.data instanceof ArrayBuffer ? payload.data : payload.data && payload.data.buffer);
+      if (!(data instanceof ArrayBuffer) || !payload.width || !payload.height || data.byteLength !== payload.width * payload.height * 4) throw new Error('SAM 입력이 올바르지 않습니다.');
+      await sendToSam({ type: 'encode', width: payload.width, height: payload.height, data }, 180000, [data]);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('sam:decode', async (event, payload) => {
+    try {
+      const grid = Math.max(2, Math.min(20, Math.round(Number(payload && payload.grid) || 0)));
+      const outW = Math.max(16, Math.min(640, Math.round(Number(payload && payload.outW) || 0)));
+      const outH = Math.max(16, Math.min(640, Math.round(Number(payload && payload.outH) || 0)));
+      const result = await sendToSam({ type: 'decode', grid, outW, outH }, 600000);
+      return { ok: true, width: result.width, height: result.height, masks: result.masks };
+    } catch (error) {
+      return { ok: false, error: error.message };
+    }
+  });
+
   ipcMain.handle('ai:ensure', async (event, payload) => {
     try {
       ensureAIWorker();
@@ -1179,6 +1202,54 @@ function ensureAIWorker() {
   });
 }
 
+// MobileSAM for the image editor (own worker, loaded the first time the SAM filter is used).
+let samWorker = null;
+let samSeq = 0;
+const samPending = new Map();
+
+function ensureSamWorker() {
+  if (samWorker) return;
+  samWorker = new Worker(path.join(__dirname, 'sam-worker.js'), {
+    workerData: { modelDir: aiModelDir(), encoder: 'mobile_sam_image_encoder.onnx', decoder: 'sam_mask_decoder_single.onnx' }
+  });
+  samWorker.on('message', (message) => {
+    const pending = message && samPending.get(message.id);
+    if (!pending) return;
+    samPending.delete(message.id);
+    clearTimeout(pending.timer);
+    if (message.type === 'error') pending.reject(new Error(message.message));
+    else pending.resolve(message);
+  });
+  const reset = (reason) => {
+    samWorker = null;
+    for (const pending of samPending.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(new Error(reason));
+    }
+    samPending.clear();
+  };
+  samWorker.on('error', (error) => reset(error.message || 'SAM 오류'));
+  samWorker.on('exit', () => reset('SAM 워커가 종료되었습니다.'));
+}
+
+function sendToSam(message, timeoutMs, transferList) {
+  return new Promise((resolve, reject) => {
+    try {
+      ensureSamWorker();
+      message.id = ++samSeq;
+      // No terminate() on a timeout: killing a worker while onnxruntime runs can crash the whole process.
+      const timer = setTimeout(() => {
+        samPending.delete(message.id);
+        reject(new Error('SAM 응답 시간 초과'));
+      }, timeoutMs);
+      samPending.set(message.id, { resolve, reject, timer });
+      samWorker.postMessage(message, transferList || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
 function sendToAI(message, timeoutMs, transferList) {
   return new Promise((resolve, reject) => {
     if (!aiWorker) {
@@ -1220,6 +1291,14 @@ app.on('before-quit', () => {
   globalShortcut.unregisterAll();
   closeOverlays();
   closeLens();
+  if (samWorker) {
+    try {
+      samWorker.terminate();
+    } catch {
+      // Ignore.
+    }
+    samWorker = null;
+  }
   if (aiWorker) {
     try {
       aiWorker.terminate();

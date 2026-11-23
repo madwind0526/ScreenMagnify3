@@ -993,6 +993,8 @@
 
   // Everything outside the selected shape (and outside the image when zoomed out) becomes transparent.
   function composePanel(panel) {
+    // While the editor is open, saving means the edited picture.
+    if (window.SMEditor && window.SMEditor.isOpen) return window.SMEditor.exportCanvas();
     const out = document.createElement('canvas');
     out.width = panel.canvas.width;
     out.height = panel.canvas.height;
@@ -1365,7 +1367,7 @@
         return;
       }
 
-      if (typing || saveOpen) return;
+      if (typing || saveOpen || (window.SMEditor && window.SMEditor.isOpen)) return;
 
       if (event.key === '+' || event.key === '=') {
         event.preventDefault();
@@ -1376,20 +1378,21 @@
       } else if (event.key === '0') {
         event.preventDefault();
         resetView();
-      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' ||
-                 event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-        if (!ready) return;
+      } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        // Previous / next method for the active panel (GPU-only ones are skipped while the device is CPU).
         event.preventDefault();
-        const view = getView();
-        const stepX = view.w * 0.08;
-        const stepY = view.h * 0.08;
-        if (event.key === 'ArrowLeft') center.x -= stepX;
-        if (event.key === 'ArrowRight') center.x += stepX;
-        if (event.key === 'ArrowUp') center.y -= stepY;
-        if (event.key === 'ArrowDown') center.y += stepY;
-        getView();
-        markViewChanged();
-        showHud();
+        const panel = panels[active];
+        if (!ready || !panel) return;
+        const list = SM.methods.filter((m) => !(m.gpuOnly && !useGpu()));
+        const at = list.findIndex((m) => m.id === panel.method);
+        const next = list[clamp(at + (event.key === 'ArrowUp' ? -1 : 1), 0, list.length - 1)];
+        if (next && next.id !== panel.method) applyPanelMethod(panel, next.id);
+        methodSelect.value = panel.method;
+        toast(SM.byId(panel.method).label);
+      } else if (event.key === 'ArrowRight') {
+        // Edit what the active panel shows now; the viewer underneath stays as it is.
+        event.preventDefault();
+        if (ready && panels[active]) window.SMEditor.open(composePanel(panels[active]));
       }
     });
 

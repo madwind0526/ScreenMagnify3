@@ -53,6 +53,10 @@ contextBridge.exposeInMainWorld('api', {
   shell: {
     reveal: (target) => ipcRenderer.invoke('shell:reveal', target)
   },
+  sam: {
+    encode: (payload) => ipcRenderer.invoke('sam:encode', payload),
+    decode: (payload) => ipcRenderer.invoke('sam:decode', payload)
+  },
   ai: {
     info: (model) => ipcRenderer.invoke('ai:info', { model }),
     ensure: (model) => ipcRenderer.invoke('ai:ensure', { model }),

@@ -47,6 +47,7 @@
   let aiFailures = 0;
   let retryTimer = null;
   let liveLoopStarted = false;
+  let editing = false; // the image editor is open over the lens
 
   // Sizes of the cartoon frame follow the lens size (--u = shorter side).
   function positionHandle(lw, lh) {
@@ -215,6 +216,7 @@
       return;
     }
     aiBusy = true;
+    const requestModel = aiModel;
     if (!live) aiLabel.textContent = 'AI 처리 중';
     try {
       // Full resolution input (the worker tiles big regions); the model never sees a shrunken picture.
@@ -222,6 +224,8 @@
       const started = Date.now();
       const result = await window.api.ai.infer({ width: crop.width, height: crop.height, data: data.buffer, model: aiModel });
       if (!result || result.ok === false) throw new Error((result && result.error) || 'AI 처리 실패');
+      // The method was changed while the model ran: that result belongs to the old model.
+      if (requestModel !== aiModel) return;
       lastAiMs = Date.now() - started;
       aiProvider = result.provider || aiProvider;
       aiData = { data: new Uint8ClampedArray(result.data), w: result.width, h: result.height };
@@ -399,7 +403,58 @@
     ctx.drawImage(source, 0, 0);
     return out;
   }
-  window.SMSave.setProvider(lensSnapshot);
+  window.SMSave.setProvider(() => (editing ? window.SMEditor.exportCanvas() : lensSnapshot()));
+
+  // Up/Down arrows: previous / next method (GPU-only ones are skipped while the device is CPU).
+  function changeMethod(dir) {
+    const list = SM.methods.filter((m) => !(m.gpuOnly && !useGpu()));
+    const at = list.findIndex((m) => m.id === cfg.method);
+    const next = list[Math.max(0, Math.min(list.length - 1, at + dir))];
+    if (!next) return;
+    if (next.id === cfg.method) {
+      showBadge(next.label);
+      return;
+    }
+    applyMethod(next.id, true);
+  }
+
+  function applyMethod(id, announce) {
+    cfg.method = id;
+    aiReady = false;
+    aiFrameKey = '';
+    aiData = null;
+    aiFailures = 0;
+    tooBig = false;
+    clearTimeout(aiTimer);
+    clearTimeout(retryTimer);
+    aiLabel.textContent = '';
+    if (SM.isAI(id)) initAI();
+    else aiModel = null;
+    showBadge(SM.byId(id).label);
+    if (announce) {
+      channel.postMessage({ method: id });
+      window.api.settings.set({ method: id });
+    }
+    render();
+  }
+
+  // Right arrow: edit what the lens shows now. The lens stays where it was and comes back on the left arrow.
+  function enterEdit() {
+    if (editing || window.SMSave.isOpen || !hadPointer || lens.style.display === 'none') return;
+    const snap = lensSnapshot();
+    if (!snap) return;
+    editing = true;
+    // The picture is edited at the size and place of the lens; the lens frame stays under it.
+    const box = view.getBoundingClientRect();
+    window.SMEditor.open(snap, {
+      rect: { left: box.left, top: box.top, width: box.width, height: box.height },
+      round,
+      onClose: () => {
+        editing = false;
+        render();
+      }
+    });
+  }
 
   // Pointer events can arrive faster than frames (120 Hz mice): draw at most once per frame.
   let rafPending = false;
@@ -413,7 +468,7 @@
   }
 
   // One lens window per display: only the display under the cursor shows the lens.
-  document.documentElement.addEventListener('mouseleave', () => { if (!window.SMSave.isOpen) lens.style.display = 'none'; });
+  document.documentElement.addEventListener('mouseleave', () => { if (!window.SMSave.isOpen && !editing) lens.style.display = 'none'; });
   document.documentElement.addEventListener('mouseenter', () => { window.focus(); });
   const channel = new BroadcastChannel('lens-state');
   channel.onmessage = (e) => {
@@ -425,12 +480,17 @@
       }
       return;
     }
+    if (e.data.method) {
+      // Another display's lens changed the method.
+      if (e.data.method !== cfg.method) applyMethod(e.data.method, false);
+      return;
+    }
     mag = e.data.mag;
     scale = e.data.scale;
     requestRender();
   };
   window.addEventListener('pointermove', (e) => {
-    if (window.SMSave.isOpen) return;
+    if (window.SMSave.isOpen || editing) return;
     hadPointer = true;
     lens.style.display = 'block';
     cx = e.clientX;
@@ -438,7 +498,7 @@
     requestRender();
   });
   window.addEventListener('wheel', (e) => {
-    if (window.SMSave.isOpen) return;
+    if (window.SMSave.isOpen || editing) return;
     e.preventDefault();
     const now = performance.now();
     if (now - lastWheelAt < 24) return;
@@ -457,7 +517,7 @@
   }, { passive: false });
   window.addEventListener('contextmenu', (e) => {
     e.preventDefault();
-    if (window.SMSave.isOpen) return;
+    if (window.SMSave.isOpen || editing) return;
     window.api.lens.close();
   });
   window.addEventListener('keydown', (e) => {
@@ -470,6 +530,17 @@
     }
     if (window.SMSave.isOpen) return; // typing in the dialog
     if (e.key === 'Escape') window.api.lens.close();
+    if (editing) return;
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      changeMethod(e.key === 'ArrowUp' ? -1 : 1);
+      return;
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      enterEdit();
+      return;
+    }
     // Retry the AI by hand after the automatic retries gave up.
     if ((e.key === 'r' || e.key === 'R') && SM.isAI(cfg.method) && !aiReady && !aiBusy) {
       aiFailures = 0;

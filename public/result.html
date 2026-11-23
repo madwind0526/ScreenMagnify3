@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ScreenMagnify 확대</title>
   <link rel="stylesheet" href="css/result.css">
+  <link rel="stylesheet" href="css/editor.css">
 </head>
 <body>
   <div class="result-app">
@@ -78,8 +79,11 @@
         <span>휠: 확대</span>
         <span>드래그: 이동</span>
         <span>더블클릭: 초기화</span>
+        <span>↑↓: 모델</span>
+        <span>→: 편집</span>
       </div>
       <div class="hud" id="hud">x1.0</div>
+      <div class="editor-root in-viewport" id="editor-root"></div>
     </main>
   </div>
 
@@ -144,6 +148,8 @@
   <script src="js/methods.js"></script>
   <script src="js/upscaler.js"></script>
   <script src="js/cpu-scaler.js"></script>
+  <script src="js/editor-core.js"></script>
+  <script src="js/editor.js"></script>
   <script src="js/result.js"></script>
 </body>
 </html>
